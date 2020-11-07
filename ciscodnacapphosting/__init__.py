@@ -16,10 +16,44 @@ class Api:
         self.settings["dnac_verify"] = True
         self.settings["dnac_token"] = None
         self.docker = docker.Api()
-        # self.docker = docker.ApiNew()
+
+        config = self.config(operation="read")
+        self.settings = {**self.settings, **config[1]}
+        #print(json.dumps(self.settings, indent=4))
 
         self._auth()
         return
+    def config(hostname="", username="", password="", insecure="", **kwargs):
+        if "write" in kwargs["operation"]:
+            data = {
+                "dnac": {
+                    "hostname": hostname,
+                    "username": username,
+                    "password": password,
+                    "insecure": insecure
+                }
+            }
+            try:
+                with open("config.json", "w") as f: 
+                    # Writing data to a file 
+                    f.write(json.dumps(data, indent=4))
+                f.close()
+                return True, None
+            except Exception as e:
+                return False, f"Can't update config file ({e})"
+        if "read" in kwargs["operation"]:
+            try:
+                with open("config.json", "r") as f: 
+                    # Writing data to a file 
+                    data = f.read()
+                f.close()
+                return True, json.loads(data)
+            except Exception as e:
+                return False, f"Can't read config file ({e})"
+
+        return False, "Error"
+        
+            
 
     def _auth(self):
         url = f"https://{self.settings['dnac_host']}/dna/system/api/v1/auth/token"
@@ -28,14 +62,21 @@ class Api:
         pass
 
     def get(self, **kwargs):
+        print(kwargs)
         if "image" in kwargs:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps?searchByName={kwargs['image']}"
+            if "tag" in kwargs:
+                url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['image']}/{kwargs['tag']}"
         elif "appId" in kwargs:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest"
             if "tag" in kwargs:
                 url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}"
         else:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps?limit=1000&offset=0"
+        
+        print(url)
+        #import sys
+        #sys.exit()
         data = self._request(type="get", url=url)
         return data
 
