@@ -1,6 +1,7 @@
-import docker
-import ciscodnacapphosting
 
+import ciscodnacapphosting
+'''
+import docker
 client = docker.from_env()
 
 def docker_download(image="", tag="latest"):
@@ -23,10 +24,12 @@ def docker_save(image="", tag="latest"):
         f.write(chunk)
     f.close()
     return
-
+'''
 #r = requests.post(url, files={tarFile: open(tarFile, 'rb')}, headers=headers)
 
 dnac_app = ciscodnacapphosting.Api()
+upload = dnac_app.upload(tar="alpine.tar")
+"""
 #print(dnac_app.settings)
 #print(dnac_app.get())
 #print(dnac_app.get(image="robertcsapo/speedtest"))
@@ -35,3 +38,4 @@ print(f'AppId: {app["data"][0]["appId"]} - Name: {app["data"][0]["name"]}')
 app_id = app["data"][0]["appId"]
 delete = dnac_app.delete(appId=app_id)
 print(delete)
+"""

@@ -2,7 +2,8 @@ import json
 from types import SimpleNamespace as Namespace
 import requests
 from requests.auth import HTTPBasicAuth
-
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+import xmltodict
 
 class Api:
     def __init__(self):
@@ -93,27 +94,32 @@ class Api:
 
 
             #files = {'name': 'file', 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
-            files = {'name': ('file', None), 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
-            """
-            response = requests.request(
-                "POST",
-                url,
-                headers=headers,
-                #data=payload,
-                files=files,
-                verify=self.settings["dnac_verify"],
-            )
-            """
-            #response = requests.post(url, files=files, headers=headers)
-            response = requests.post(url, files=files, headers=headers)
-            #print(response.request.body)
-            print(response.request.headers)
-            print(response.text)
-            import sys
+            #files = {'name': ('file', None), 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
+            #files = {"filename":"speedtest.tar","file": ("speedtest.tar", open('speedtest.tar', 'rb'), 'application/x-tar')}
+            #files = {"name":"speedtest.tar", "file":"speedtest.tar" ,"filename": ("speedtest", open('speedtest.tar', 'rb'), 'application/x-tar')}
 
-            sys.exit()
-            data = response.json()
+            mp_encoder = MultipartEncoder(
+                fields={
+                    'filename': tar,
+                    # plain file object, no filename or mime type produces a
+                    # Content-Disposition header with just the part name
+                    'file': (tar, open('alpine.tar', 'rb'), 'application/x-tar'),
+                }
+            )
+            response = requests.post(url, data=mp_encoder, headers={'Content-Type': mp_encoder.content_type, "X-Auth-Token": self.settings["dnac_token"]})
+            #files = {"name": (open('alpine.tar', 'rb')), "filename":("alpine.tar", 'application/x-tar')}
+            #response = requests.post(url, files=files, headers=headers)
+            #print(response.request.body)
+            #print(response.request.headers)
+            print(response.status_code)
+
+            if response.ok:
+                data = response.json()
+            else:
+                data = xmltodict.parse(response.content)
+                raise Exception(f"Error ({data['error']['code']}): {data['error']['description']}")
             return data
+            
         if "put" in kwargs["type"].lower():
             url = kwargs["url"]
             payload = kwargs["payload"]
