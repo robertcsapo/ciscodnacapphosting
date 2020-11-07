@@ -12,7 +12,7 @@ class Api:
         self.settings["dnac_pass"] = "Gotlab13"
         self.settings["dnac_verify"] = True
         self.settings["dnac_token"] = None
-        
+
         self._auth()
         return
 
@@ -32,7 +32,9 @@ class Api:
         return data
 
     def upload(self, **kwargs):
-        pass
+        url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps?type=docker"
+        data = self._request(type="post", url=url, tar=kwargs["tar"])
+        return data
 
     def update(self, **kwargs):
         pass
@@ -43,7 +45,7 @@ class Api:
         else:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest?cancelOutstandingActions=true"
         data = self._request(type="delete", url=url)
-
+        return data
 
     def _request(self, **kwargs):
         if "auth" in kwargs["type"].lower():
@@ -52,7 +54,9 @@ class Api:
             response = requests.request(
                 "POST",
                 url,
-                auth=HTTPBasicAuth(self.settings["dnac_user"], self.settings["dnac_pass"]),
+                auth=HTTPBasicAuth(
+                    self.settings["dnac_user"], self.settings["dnac_pass"]
+                ),
                 headers=headers,
                 verify=self.settings["dnac_verify"],
             )
@@ -64,6 +68,7 @@ class Api:
             headers = {
                 "X-Auth-Token": self.settings["dnac_token"],
                 "Content-Type": "application/json",
+                "Accept": "application/json",
             }
             response = requests.request(
                 "GET", url, headers=headers, verify=self.settings["dnac_verify"]
@@ -72,19 +77,41 @@ class Api:
             return data
         if "post" in kwargs["type"].lower():
             url = kwargs["url"]
-            payload = kwargs["payload"]
+            tar = kwargs["tar"]
             headers = {
                 "X-Auth-Token": self.settings["dnac_token"],
-                "Content-Type": "application/json",
+                "Content-Type": "multi-part/form-data",
+                "Accept": "application/json",
             }
             """
             TODO
             Content-Disposition: form-data; name="file"; filename="speedtest.tar"
             Content-Type: application/x-tar
             """
+            print(tar)
+            # response = requests.request("POST", url, files={tar: open(tar, 'rb')}, headers=headers)
+
+
+            #files = {'name': 'file', 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
+            files = {'name': ('file', None), 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
+            """
             response = requests.request(
-                "POST", url, headers=headers, data=payload, verify=self.settings["dnac_verify"]
+                "POST",
+                url,
+                headers=headers,
+                #data=payload,
+                files=files,
+                verify=self.settings["dnac_verify"],
             )
+            """
+            #response = requests.post(url, files=files, headers=headers)
+            response = requests.post(url, files=files, headers=headers)
+            #print(response.request.body)
+            print(response.request.headers)
+            print(response.text)
+            import sys
+
+            sys.exit()
             data = response.json()
             return data
         if "put" in kwargs["type"].lower():
@@ -93,6 +120,7 @@ class Api:
             headers = {
                 "X-Auth-Token": self.settings["dnac_token"],
                 "Content-Type": "application/json",
+                "Accept": "application/json",
             }
             """
             TODO
@@ -100,7 +128,11 @@ class Api:
             Content-Type: application/x-tar
             """
             response = requests.request(
-                "POST", url, headers=headers, data=payload, verify=self.settings["dnac_verify"]
+                "POST",
+                url,
+                headers=headers,
+                data=payload,
+                verify=self.settings["dnac_verify"],
             )
             data = response.json()
             return data
@@ -120,5 +152,6 @@ class Api:
                 return False
 
         return
+
     def parse(data):
         return json.loads(json.dumps(data), object_hook=event)
