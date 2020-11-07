@@ -4,6 +4,7 @@ import click
 
 
 @click.group(chain=True)
+@click.version_option()
 @click.option("--debug/--no-debug", default=False)
 @click.pass_context
 def cli(ctx, debug):
