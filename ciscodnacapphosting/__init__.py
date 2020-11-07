@@ -1,3 +1,5 @@
+import json
+from types import SimpleNamespace as Namespace
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -25,6 +27,7 @@ class Api:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps?searchByName={kwargs['image']}"
         else:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps?limit=1000&offset=0"
+        print(kwargs)
         data = self._request(type="get", url=url)
         return data
 
@@ -35,10 +38,15 @@ class Api:
         pass
 
     def delete(self, **kwargs):
-        pass
+        if "tag" in kwargs:
+            url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}?cancelOutstandingActions=true"
+        else:
+            url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest?cancelOutstandingActions=true"
+        data = self._request(type="delete", url=url)
+
 
     def _request(self, **kwargs):
-        if "auth" in kwargs["type"]:
+        if "auth" in kwargs["type"].lower():
             url = kwargs["url"]
             headers = {"Content-Type": "application/json", "Accept": "application/json"}
             response = requests.request(
@@ -51,10 +59,10 @@ class Api:
             data = response.json()
             return data
 
-        if "get" in kwargs["type"]:
+        if "get" in kwargs["type"].lower():
             url = kwargs["url"]
             headers = {
-                "x-auth-token": self.settings["dnac_token"],
+                "X-Auth-Token": self.settings["dnac_token"],
                 "Content-Type": "application/json",
             }
             response = requests.request(
@@ -62,4 +70,55 @@ class Api:
             )
             data = response.json()
             return data
+        if "post" in kwargs["type"].lower():
+            url = kwargs["url"]
+            payload = kwargs["payload"]
+            headers = {
+                "X-Auth-Token": self.settings["dnac_token"],
+                "Content-Type": "application/json",
+            }
+            """
+            TODO
+            Content-Disposition: form-data; name="file"; filename="speedtest.tar"
+            Content-Type: application/x-tar
+            """
+            response = requests.request(
+                "POST", url, headers=headers, data=payload, verify=self.settings["dnac_verify"]
+            )
+            data = response.json()
+            return data
+        if "put" in kwargs["type"].lower():
+            url = kwargs["url"]
+            payload = kwargs["payload"]
+            headers = {
+                "X-Auth-Token": self.settings["dnac_token"],
+                "Content-Type": "application/json",
+            }
+            """
+            TODO
+            Content-Disposition: form-data; name="file"; filename="speedtest.tar"
+            Content-Type: application/x-tar
+            """
+            response = requests.request(
+                "POST", url, headers=headers, data=payload, verify=self.settings["dnac_verify"]
+            )
+            data = response.json()
+            return data
+        if "delete" in kwargs["type"].lower():
+            url = kwargs["url"]
+            headers = {
+                "X-Auth-Token": self.settings["dnac_token"],
+                "Content-Type": "application/json",
+            }
+            response = requests.request(
+                "DELETE", url, headers=headers, verify=self.settings["dnac_verify"]
+            )
+            print(response.status_code)
+            if response.ok:
+                return True
+            else:
+                return False
+
         return
+    def parse(data):
+        return json.loads(json.dumps(data), object_hook=event)

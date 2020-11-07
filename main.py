@@ -28,5 +28,10 @@ def docker_save(image="", tag="latest"):
 
 dnac_app = ciscodnacapphosting.Api()
 #print(dnac_app.settings)
-print(dnac_app.get())
-print(dnac_app.get(image="robertcsapo/speedtest"))
+#print(dnac_app.get())
+#print(dnac_app.get(image="robertcsapo/speedtest"))
+app = dnac_app.get(image="robertcsapo/speedtest")
+print(f'AppId: {app["data"][0]["appId"]} - Name: {app["data"][0]["name"]}')
+app_id = app["data"][0]["appId"]
+delete = dnac_app.delete(appId=app_id)
+print(delete)
