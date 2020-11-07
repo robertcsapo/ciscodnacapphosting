@@ -5,21 +5,19 @@ import click
 
 @click.group(chain=True)
 @click.version_option()
-@click.option("--debug/--no-debug", default=False)
 @click.pass_context
-def cli(ctx, debug):
-    print("Debug mode is %s" % ("on" if debug else "off"))
-
+def cli(ctx):
+    pass
 
 @cli.command("config")
-@click.option("--hostname", required=False)
-@click.option("--username", required=False)
-@click.option("--password", required=False)
-@click.option("--insecure/--no-insecure", default=False)
+@click.option("--hostname", required=True)
+@click.option("--username", required=True)
+@click.option("--password", required=True)
+@click.option("--secure/--no-secure", default=True)
 @click.pass_context
-def dnac_config(ctx, hostname, username, password, insecure):
+def dnac_config(ctx, hostname, username, password, secure):
     status = ciscodnacapphosting.Api.config(
-        hostname, username, password, insecure, operation="write"
+        hostname, username, password, secure, operation="write"
     )
     if status[0] is True:
         click.echo("Success: Config Updated")
@@ -61,7 +59,7 @@ def app(ctx, id, image, tag):
 @click.option("--file", required=True)
 @click.option("--categories", required=True)
 @click.pass_context
-def app(ctx, file, categories):
+def upload(ctx, file, categories):
     dnac_app = ciscodnacapphosting.Api()
     dnac_app.upload(tar=file, categories=categories)
     return
@@ -71,7 +69,7 @@ def app(ctx, file, categories):
 @click.option("--id", required=True)
 @click.option("--categories", required=True)
 @click.pass_context
-def app(ctx, id, categories):
+def update(ctx, id, categories):
     dnac_app = ciscodnacapphosting.Api()
     update = dnac_app.update(appId=id, categories=categories)
     return
@@ -80,13 +78,13 @@ def app(ctx, id, categories):
 @cli.command("delete")
 @click.option("--id", required=True)
 @click.pass_context
-def app(ctx, id):
+def delete(ctx, id):
     dnac_app = ciscodnacapphosting.Api()
     delete = dnac_app.delete(appId=id)
     return
 
 
-@cli.command()
+@cli.command("docker")
 @click.option("--download", required=False)
 @click.option("--save/--no-save", default=False)
 def docker(download, save):
@@ -112,5 +110,4 @@ def docker(download, save):
 
 
 if __name__ == "__main__":
-    # dnac_app = ciscodnacapphosting.Api()
     cli()

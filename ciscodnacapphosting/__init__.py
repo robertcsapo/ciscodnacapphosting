@@ -13,13 +13,6 @@ version = "0.1"
 class Api:
     def __init__(self):
         self.settings = {}
-        """
-        self.settings["dnac_host"] = "dnac-gotlab.aws.labrats.se"
-        self.settings["dnac_user"] = "admin"
-        self.settings["dnac_pass"] = "Gotlab13"
-        self.settings["dnac_verify"] = True
-        self.settings["dnac_token"] = None
-        """
         self.docker = dockerctl.Api()
         config = self.config(operation="read")
         self.settings = {**self.settings, **config[1]}
@@ -27,14 +20,14 @@ class Api:
         self._auth()
         return
 
-    def config(hostname="", username="", password="", insecure="", **kwargs):
+    def config(hostname="", username="", password="", secure="", **kwargs):
         if "write" in kwargs["operation"]:
             data = {
                 "dnac": {
                     "hostname": hostname,
                     "username": username,
                     "password": password,
-                    "insecure": insecure,
+                    "secure": secure,
                 }
             }
             try:
@@ -52,7 +45,7 @@ class Api:
                 f.close()
                 return True, json.loads(data)
             except Exception as e:
-                return False, f"Can't read config file ({e})"
+                raise Exception(f"Can't read config file ({e})")
 
         return False, "Error"
 
@@ -140,7 +133,7 @@ class Api:
                     self.settings["dnac"]["username"], self.settings["dnac"]["password"]
                 ),
                 headers=headers,
-                verify=self.settings["dnac"]["insecure"],
+                verify=self.settings["dnac"]["secure"],
             )
             data = response.json()
             return data
@@ -153,7 +146,7 @@ class Api:
                 "Accept": "application/json",
             }
             response = requests.request(
-                "GET", url, headers=headers, verify=self.settings["dnac"]["insecure"]
+                "GET", url, headers=headers, verify=self.settings["dnac"]["secure"]
             )
             data = response.json()
             return data
@@ -179,7 +172,7 @@ class Api:
                     "Content-Type": multi_part.content_type,
                     "X-Auth-Token": self.settings["dnac"]["token"],
                 },
-                verify=self.settings["dnac"]["insecure"],
+                verify=self.settings["dnac"]["secure"],
             )
             if response.ok:
                 data = response.json()
@@ -204,7 +197,7 @@ class Api:
                 url,
                 headers=headers,
                 data=payload,
-                verify=self.settings["dnac"]["insecure"],
+                verify=self.settings["dnac"]["secure"],
             )
             if response.ok:
                 data = response.json()
@@ -218,7 +211,7 @@ class Api:
                 "Content-Type": "application/json",
             }
             response = requests.request(
-                "DELETE", url, headers=headers, verify=self.settings["dnac"]["insecure"]
+                "DELETE", url, headers=headers, verify=self.settings["dnac"]["secure"]
             )
             print(response.status_code)
             if response.ok:
