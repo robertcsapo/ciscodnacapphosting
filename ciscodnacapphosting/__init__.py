@@ -5,6 +5,7 @@ from requests.auth import HTTPBasicAuth
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import xmltodict
 
+
 class Api:
     def __init__(self):
         self.settings = {}
@@ -26,9 +27,12 @@ class Api:
     def get(self, **kwargs):
         if "image" in kwargs:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps?searchByName={kwargs['image']}"
+        elif "appId" in kwargs:
+            url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest"
+            if "tag" in kwargs:
+                url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}"
         else:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps?limit=1000&offset=0"
-        print(kwargs)
         data = self._request(type="get", url=url)
         return data
 
@@ -38,7 +42,25 @@ class Api:
         return data
 
     def update(self, **kwargs):
-        pass
+        print(kwargs)
+        app = self.get(appId=kwargs["appId"])
+        if "tag" in kwargs:
+            url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}"
+        else:
+            url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest"
+        # data = {}
+        valid_metadata = self._supported_app_metadata(**kwargs)
+        if valid_metadata[0] is False:
+            raise Exception(f"Error: Unsupported metadata for application {kwargs}")
+        data = {**app, **valid_metadata[1]}
+        import json
+
+        print(json.dumps(app, indent=4))
+        print(json.dumps(data, indent=4))
+        # import sys
+        # sys.exit()
+        data = self._request(type="put", url=url, payload=data)
+        return data
 
     def delete(self, **kwargs):
         if "tag" in kwargs:
@@ -47,6 +69,24 @@ class Api:
             url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest?cancelOutstandingActions=true"
         data = self._request(type="delete", url=url)
         return data
+
+    def _supported_app_metadata(self, **kwargs):
+        data = {}
+        if "categories" in kwargs:
+            categories = ["Monitoring", "Security", "IOT", "Others"]
+            if kwargs["categories"] in categories:
+                data["categories"] = []
+                data["categories"].append(kwargs["categories"])
+                return True, data
+            return False, None
+
+    def _update_app_info(self, id, **kwargs):
+        """
+        TODO REMOVE?
+        """
+
+        # https://dnac-gotlab.aws.labrats.se/api/iox/service/api/v1/appmgr/apps/8d445e1b-b707-47f6-bd8d-8a273758d389/latest
+        return
 
     def _request(self, **kwargs):
         if "auth" in kwargs["type"].lower():
@@ -77,7 +117,10 @@ class Api:
             data = response.json()
             return data
         if "post" in kwargs["type"].lower():
-            """ Make pretty TODO """
+            """
+            Make pretty TODO
+            missing SSL verify
+            """
             url = kwargs["url"]
             tar = kwargs["tar"]
             headers = {
@@ -93,53 +136,71 @@ class Api:
             print(tar)
             # response = requests.request("POST", url, files={tar: open(tar, 'rb')}, headers=headers)
 
-
-            #files = {'name': 'file', 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
-            #files = {'name': ('file', None), 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
-            #files = {"filename":"speedtest.tar","file": ("speedtest.tar", open('speedtest.tar', 'rb'), 'application/x-tar')}
-            #files = {"name":"speedtest.tar", "file":"speedtest.tar" ,"filename": ("speedtest", open('speedtest.tar', 'rb'), 'application/x-tar')}
+            # files = {'name': 'file', 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
+            # files = {'name': ('file', None), 'filename': ('speedtest.tar', open('speedtest.tar', 'rb'), 'application/x-tar')}
+            # files = {"filename":"speedtest.tar","file": ("speedtest.tar", open('speedtest.tar', 'rb'), 'application/x-tar')}
+            # files = {"name":"speedtest.tar", "file":"speedtest.tar" ,"filename": ("speedtest", open('speedtest.tar', 'rb'), 'application/x-tar')}
 
             mp_encoder = MultipartEncoder(
                 fields={
-                    'filename': tar,
-                    'file': (tar, open(tar, 'rb'), 'application/x-tar'),
+                    "filename": tar,
+                    "file": (tar, open(tar, "rb"), "application/x-tar"),
                 }
             )
-            response = requests.post(url, data=mp_encoder, headers={'Content-Type': mp_encoder.content_type, "X-Auth-Token": self.settings["dnac_token"]})
-            #files = {"name": (open('alpine.tar', 'rb')), "filename":("alpine.tar", 'application/x-tar')}
-            #response = requests.post(url, files=files, headers=headers)
-            #print(response.request.body)
-            #print(response.request.headers)
+            response = requests.post(
+                url,
+                data=mp_encoder,
+                headers={
+                    "Content-Type": mp_encoder.content_type,
+                    "X-Auth-Token": self.settings["dnac_token"],
+                },
+            )
+            # files = {"name": (open('alpine.tar', 'rb')), "filename":("alpine.tar", 'application/x-tar')}
+            # response = requests.post(url, files=files, headers=headers)
+            # print(response.request.body)
+            # print(response.request.headers)
             print(response.status_code)
 
             if response.ok:
                 data = response.json()
             else:
                 data = xmltodict.parse(response.content)
-                raise Exception(f"Error ({data['error']['code']}): {data['error']['description']}")
+                raise Exception(
+                    f"Error ({data['error']['code']}): {data['error']['description']}"
+                )
             return data
 
         if "put" in kwargs["type"].lower():
+            """
+            TODO clean up
+            """
             url = kwargs["url"]
-            payload = kwargs["payload"]
+            payload = json.dumps(kwargs["payload"])
+            # import json
+            # print("---")
+            # print(json.dumps(payload, indent=4))
             headers = {
                 "X-Auth-Token": self.settings["dnac_token"],
                 "Content-Type": "application/json",
                 "Accept": "application/json",
             }
-            """
-            TODO
-            Content-Disposition: form-data; name="file"; filename="speedtest.tar"
-            Content-Type: application/x-tar
-            """
             response = requests.request(
-                "POST",
+                "PUT",
                 url,
                 headers=headers,
                 data=payload,
                 verify=self.settings["dnac_verify"],
             )
-            data = response.json()
+            print(response.status_code)
+            if response.ok:
+                data = response.json()
+                print(data)
+            else:
+                print(response.content)
+                """
+                TODO error at update?
+                """
+                return
             return data
         if "delete" in kwargs["type"].lower():
             url = kwargs["url"]
