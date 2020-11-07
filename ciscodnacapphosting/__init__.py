@@ -4,7 +4,8 @@ import requests
 from requests.auth import HTTPBasicAuth
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import xmltodict
-from ciscodnacapphosting import docker
+from ciscodnacapphosting import dockerctl
+from ciscodnacapphosting import cli
 
 
 class Api:
@@ -15,7 +16,7 @@ class Api:
         self.settings["dnac_pass"] = "Gotlab13"
         self.settings["dnac_verify"] = True
         self.settings["dnac_token"] = None
-        self.docker = docker.Api()
+        self.docker = dockerctl.Api()
 
         config = self.config(operation="read")
         self.settings = {**self.settings, **config[1]}
@@ -279,6 +280,3 @@ class Api:
                 return False
 
         return
-
-    def parse(data):
-        return json.loads(json.dumps(data), object_hook=event)
