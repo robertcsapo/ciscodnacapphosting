@@ -77,6 +77,7 @@ class Api:
             data = response.json()
             return data
         if "post" in kwargs["type"].lower():
+            """ Make pretty TODO """
             url = kwargs["url"]
             tar = kwargs["tar"]
             headers = {
@@ -101,9 +102,7 @@ class Api:
             mp_encoder = MultipartEncoder(
                 fields={
                     'filename': tar,
-                    # plain file object, no filename or mime type produces a
-                    # Content-Disposition header with just the part name
-                    'file': (tar, open('alpine.tar', 'rb'), 'application/x-tar'),
+                    'file': (tar, open(tar, 'rb'), 'application/x-tar'),
                 }
             )
             response = requests.post(url, data=mp_encoder, headers={'Content-Type': mp_encoder.content_type, "X-Auth-Token": self.settings["dnac_token"]})
@@ -119,7 +118,7 @@ class Api:
                 data = xmltodict.parse(response.content)
                 raise Exception(f"Error ({data['error']['code']}): {data['error']['description']}")
             return data
-            
+
         if "put" in kwargs["type"].lower():
             url = kwargs["url"]
             payload = kwargs["payload"]

@@ -29,6 +29,9 @@ def docker_save(image="", tag="latest"):
 
 dnac_app = ciscodnacapphosting.Api()
 upload = dnac_app.upload(tar="alpine.tar")
+#upload = dnac_app.upload(tar="speedtest.tar")
+print(upload["appId"])
+delete = dnac_app.delete(appId=upload["appId"])
 """
 #print(dnac_app.settings)
 #print(dnac_app.get())
