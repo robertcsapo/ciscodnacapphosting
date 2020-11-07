@@ -6,6 +6,7 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 import xmltodict
 from ciscodnacapphosting import docker
 
+
 class Api:
     def __init__(self):
         self.settings = {}
@@ -15,6 +16,7 @@ class Api:
         self.settings["dnac_verify"] = True
         self.settings["dnac_token"] = None
         self.docker = docker.Api()
+        # self.docker = docker.ApiNew()
 
         self._auth()
         return
@@ -40,14 +42,22 @@ class Api:
     def upload(self, **kwargs):
         url = f"https://{self.settings['dnac_host']}/api/iox/service/api/v1/appmgr/apps?type=docker"
         data = self._request(type="post", url=url, tar=kwargs["tar"])
-        #print(data["appId"])
+        # print(data["appId"])
         if "categories" in kwargs:
-            data = self.update(appId=data["appId"], tag=data["version"], categories=kwargs["categories"])
+            data = self.update(
+                appId=data["appId"],
+                tag=data["version"],
+                categories=kwargs["categories"],
+            )
             pass
         else:
             kwargs["categories"] = "Others"
-            data = self.update(appId=data["appId"], tag=data["version"], categories=kwargs["categories"])
-        #print(data)
+            data = self.update(
+                appId=data["appId"],
+                tag=data["version"],
+                categories=kwargs["categories"],
+            )
+        # print(data)
         return data
 
     def update(self, **kwargs):
@@ -64,8 +74,8 @@ class Api:
         data = {**app, **valid_metadata[1]}
         import json
 
-        #print(json.dumps(app, indent=4))
-        #print(json.dumps(data, indent=4))
+        # print(json.dumps(app, indent=4))
+        # print(json.dumps(data, indent=4))
         # import sys
         # sys.exit()
         data = self._request(type="put", url=url, payload=data)
@@ -132,6 +142,7 @@ class Api:
             """
             url = kwargs["url"]
             tar = kwargs["tar"]
+            print(tar)
             headers = {
                 "X-Auth-Token": self.settings["dnac_token"],
                 "Content-Type": "multi-part/form-data",
@@ -203,7 +214,7 @@ class Api:
             print(response.status_code)
             if response.ok:
                 data = response.json()
-                #print(data)
+                # print(data)
             else:
                 print(response.content)
                 """
