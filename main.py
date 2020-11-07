@@ -29,10 +29,12 @@ def docker_save(image="", tag="latest"):
 
 dnac_app = ciscodnacapphosting.Api()
 dnac_app.docker
-dnac_app.docker.download(image="alpine")
+download = dnac_app.docker.download(image="busybox", tag="1.32.0-glibc")
+print(f"Image: {download")
 #dnac_app.docker.download()
-
-dnac_app.docker.save(image="alpine", tag="latest")
+save = dnac_app.docker.save(image=download['image'], tag=download['tag'])
+print(f"Save: {save}")
+#dnac_app.docker.save(image="alpine", tag="latest")
 
 """
 apps = dnac_app.get()
