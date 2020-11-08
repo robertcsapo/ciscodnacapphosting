@@ -14,11 +14,17 @@ def cli(ctx):
 @click.option("--username", required=True)
 @click.option("--password", required=True)
 @click.option("--secure/--no-secure", default=True)
+@click.option("--encode/--no-decode", default=False)
 @click.pass_context
-def dnac_config(ctx, hostname, username, password, secure):
-    status = ciscodnacapphosting.Api.config(
-        hostname, username, password, secure, operation="write"
+def dnac_config(ctx, hostname, username, password, secure, encode):
+    if encode != None:
+        status = ciscodnacapphosting.Api.config(
+        hostname, username, password, secure, operation="encode"
     )
+    else:
+        status = ciscodnacapphosting.Api.config(
+            hostname, username, password, secure, operation="write"
+        )
     if status[0] is True:
         click.echo("Success: Config Updated")
     else:

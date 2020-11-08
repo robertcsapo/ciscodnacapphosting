@@ -7,6 +7,7 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 import xmltodict
 from ciscodnacapphosting import dockerctl
 from ciscodnacapphosting import cli
+import base64
 
 version = "0.1"
 
@@ -24,6 +25,32 @@ class Api:
         return
 
     def config(hostname="", username="", password="", secure="", **kwargs):
+        if "encode" in kwargs["operation"]:
+            data = {
+                "dnac": {
+                    "hostname": hostname,
+                    "username": username,
+                    "password": password,
+                    "secure": secure,
+                }
+            }
+            data = str(data)
+            #data_bytes = data.encode('ascii')
+            data_base64 = base64.b64encode(data.encode("ascii"))
+            #print("catch")
+            print(data_base64.decode("utf-8"))
+            #import sys
+            #sys.exit()
+            try:
+                with open("config.json", "w") as f:
+                    f.write(data_base64.decode("utf-8"))
+                f.close()
+                return True, None
+            except Exception as e:
+                return False, f"Can't update config file ({e})"
+            pass
+        if "decode" in kwargs["operation"]:
+            pass
         if "write" in kwargs["operation"]:
             data = {
                 "dnac": {
