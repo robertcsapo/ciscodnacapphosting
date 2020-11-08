@@ -2,7 +2,6 @@ import ciscodnacapphosting
 
 if __name__ == "__main__":
     import logging
-
     logging.basicConfig(
         format="%(asctime)s %(levelname)-8s %(message)s",
         level=logging.INFO,
@@ -10,13 +9,25 @@ if __name__ == "__main__":
     )
     logging.info("Starting Application")
     dnac_app = ciscodnacapphosting.Api()
-
-    download = dnac_app.docker.download(image="nginx", tag="latest")
+    """
+    download = dnac_app.docker.download(image="busybox", tag="1.32")
     save = dnac_app.docker.save(image=download["image"], tag=download["tag"])
     upload = dnac_app.upload(tar=save["filename"], categories="IOT")
     app = dnac_app.get(appId=upload["appId"])
     print(f'Name: {app["name"]}\tAppId: {app["appId"]}')
     delete = dnac_app.delete(appId=upload["appId"])
+    """
+
+    
+    download = dnac_app.docker.download(image="busybox", tag="1.32")
+    save = dnac_app.docker.save(image=download["image"], tag=download["tag"])
+    app = dnac_app.get(image="busybox")
+    appId = app["data"][0]["appId"]
+    #upgrade = dnac_app.upgrade(appId=appId, tag="1.31", tar="busybox-1.32.tar", categories="IOT")
+    upgrade = dnac_app.upgrade(appId=appId, tar="busybox-1.32.tar", categories="IOT")
+    app = dnac_app.get(appId=upgrade["appId"])
+    delete = dnac_app.delete(appId=upgrade["appId"], tag="1.32")
+  
     
     """
     download = dnac_app.docker.download(image="nginx", tag="latest")

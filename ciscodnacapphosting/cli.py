@@ -17,7 +17,7 @@ def cli(ctx):
 @click.option("--encode/--no-decode", default=False)
 @click.pass_context
 def dnac_config(ctx, hostname, username, password, secure, encode):
-    if encode != None:
+    if encode is True:
         status = ciscodnacapphosting.Api.config(
         hostname, username, password, secure, operation="encode"
     )
@@ -39,6 +39,12 @@ def dnac_config(ctx, hostname, username, password, secure, encode):
 @click.pass_context
 def app(ctx, id, image, tag):
     dnac_app = ciscodnacapphosting.Api()
+    if id != None:
+        click.echo(f"Get App ({id})")
+    elif image != None:
+        click.echo(f"Get App ({image})")
+    else:
+        click.echo(f"Get App list")
     if id != None:
         if tag != None:
             app = dnac_app.get(appId=id, tag=tag)
@@ -67,7 +73,26 @@ def app(ctx, id, image, tag):
 @click.pass_context
 def upload(ctx, file, categories):
     dnac_app = ciscodnacapphosting.Api()
-    dnac_app.upload(tar=file, categories=categories)
+    click.echo(f"Upload App ({file}) - {categories}")
+    upload = dnac_app.upload(tar=file, categories=categories)
+    click.echo(f"New AppId ({upload['appId']}) {upload['name']}:{upload['version']} - {categories}")
+    return
+
+@cli.command("upgrade")
+@click.option("--id", required=True)
+@click.option("--tag", required=False)
+@click.option("--file", required=True)
+@click.option("--categories", required=True)
+@click.pass_context
+def upgrade(ctx, id, tag, file, categories):
+    dnac_app = ciscodnacapphosting.Api()
+    if tag != None:
+        click.echo(f"Upgrade App ({file}) - {tag} - {categories}")
+        upgrade = dnac_app.upgrade(appId=id, tag=tag, tar=file, categories=categories)
+    else:
+        click.echo(f"Upgrade App ({file}) - latest - {categories}")
+        upgrade = dnac_app.upgrade(appId=id, tar=file, categories=categories)
+    click.echo(f"New AppId {upgrade['appId']} of {upgrade['name']}:{upgrade['version']}")
     return
 
 
@@ -77,16 +102,26 @@ def upload(ctx, file, categories):
 @click.pass_context
 def update(ctx, id, categories):
     dnac_app = ciscodnacapphosting.Api()
+    click.echo(f"Update App ({id}) - {categories}")
     update = dnac_app.update(appId=id, categories=categories)
+    click.echo(f"Update App ({update['appId']}) {update['name']} - categories")
     return
 
 
 @cli.command("delete")
 @click.option("--id", required=True)
+@click.option("--tag", required=False)
 @click.pass_context
-def delete(ctx, id):
+def delete(ctx, id, tag):
     dnac_app = ciscodnacapphosting.Api()
-    delete = dnac_app.delete(appId=id)
+    if tag != None:
+        click.echo(f"Delete App ({id}) - {tag}")
+        delete = dnac_app.delete(appId=id, tag=tag)
+        click.echo(f"Deleted App ({id}) - {tag}")
+    else:
+        click.echo(f"Delete App ({id})")
+        delete = dnac_app.delete(appId=id)
+        click.echo(f"Deleted App ({id})")
     return
 
 

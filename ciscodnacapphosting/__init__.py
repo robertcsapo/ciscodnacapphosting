@@ -14,11 +14,15 @@ version = "0.1"
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 logger = logging.getLogger(__name__)
 
+
 class Api:
     def __init__(self):
         self.settings = {}
         self.docker = dockerctl.Api()
         config = self.config(operation="read")
+        if config[0] is False:
+            logging.fatal(f"{config[1]}")
+            raise Exception(f"Error: {config[1]}")
         self.settings = {**self.settings, **config[1]}
 
         self._auth()
@@ -35,12 +39,12 @@ class Api:
                 }
             }
             data = str(data)
-            #data_bytes = data.encode('ascii')
+            # data_bytes = data.encode('ascii')
             data_base64 = base64.b64encode(data.encode("ascii"))
-            #print("catch")
+            # print("catch")
             print(data_base64.decode("utf-8"))
-            #import sys
-            #sys.exit()
+            # import sys
+            # sys.exit()
             try:
                 with open("config.json", "w") as f:
                     f.write(data_base64.decode("utf-8"))
@@ -50,7 +54,13 @@ class Api:
                 return False, f"Can't update config file ({e})"
             pass
         if "decode" in kwargs["operation"]:
-            pass
+            data = kwargs["config"]
+            try:
+                data == base64.b64encode(base64.b64decode(data)).decode("utf-8")
+                data = json.loads(base64.b64decode(data).decode("utf-8"))
+            except Exception:
+                return False, f"Can't decode config"
+            return True, data
         if "write" in kwargs["operation"]:
             data = {
                 "dnac": {
@@ -70,12 +80,19 @@ class Api:
         if "read" in kwargs["operation"]:
             try:
                 with open("config.json", "r") as f:
-                    # Writing data to a file
                     data = f.read()
                 f.close()
-                return True, json.loads(data)
+                try:
+                    data == base64.b64encode(base64.b64decode(data)).decode("utf-8")
+                    data = json.loads(base64.b64decode(data).decode("utf-8"))
+                except Exception:
+                    try:
+                        data = json.loads(data)
+                    except Exception:
+                        return False, f"Can't load json from config"
+                return True, data
             except Exception as e:
-                raise Exception(f"Can't read config file ({e})")
+                return False, f"Can't read config file ({e})"
 
         return False, "Error"
 
@@ -102,13 +119,35 @@ class Api:
         else:
             logging.info(f"Cisco DNA Center AppHosting App List")
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps?limit=1000&offset=0"
-        
         data = self._request(type="get", url=url)
         return data
 
     def upload(self, **kwargs):
         url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps?type=docker"
         logging.info(f"Cisco DNA Center AppHosting Upload ({kwargs['tar']})")
+        data = self._request(type="post", url=url, tar=kwargs["tar"])
+        if "categories" in kwargs:
+            data = self.update(
+                appId=data["appId"],
+                tag=data["version"],
+                categories=kwargs["categories"],
+            )
+            pass
+        else:
+            kwargs["categories"] = "Others"
+            data = self.update(
+                appId=data["appId"],
+                tag=data["version"],
+                categories=kwargs["categories"],
+            )
+        return data
+    
+    def upgrade(self, **kwargs):
+        if "tag" not in kwargs:
+            app = self.get(appId=kwargs["appId"])
+            kwargs["tag"] = app["version"]
+        url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}/package?type=docker&action=update"
+        logging.info(f"Cisco DNA Center AppHosting Upgrade ({kwargs['tar']})")
         data = self._request(type="post", url=url, tar=kwargs["tar"])
         if "categories" in kwargs:
             data = self.update(
@@ -186,7 +225,16 @@ class Api:
             response = requests.request(
                 "GET", url, headers=headers, verify=self.settings["dnac"]["secure"]
             )
-            data = response.json()
+            if response.ok:
+                data = response.json()
+            else:
+                if response.status_code == 404:
+                    raise Exception(
+                    f"Error: Image not found in Cisco DNA Center App Hosting Repository"
+                )
+                raise Exception(
+                    f"Error: ({response.content})"
+                )
             return data
         if "post" in kwargs["type"].lower():
             url = kwargs["url"]
