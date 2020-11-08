@@ -1,52 +1,39 @@
-
 import ciscodnacapphosting
 
 if __name__ == "__main__":
+    import logging
+
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)-8s %(message)s",
+        level=logging.INFO,
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    logging.info("Starting Application")
     dnac_app = ciscodnacapphosting.Api()
 
-    """
-    download = dnac_app.docker.download(image="alpine", tag="3.12.1")
-    print(f"Download: {download}")
-    save = dnac_app.docker.save(image=download['image'], tag=download['tag'])
-    print(f"Save: {save}")
+    download = dnac_app.docker.download(image="nginx", tag="latest")
+    save = dnac_app.docker.save(image=download["image"], tag=download["tag"])
     upload = dnac_app.upload(tar=save["filename"], categories="IOT")
-    print(f"Upload: {upload['name']}")
+    app = dnac_app.get(appId=upload["appId"])
+    print(f'Name: {app["name"]}\tAppId: {app["appId"]}')
+    delete = dnac_app.delete(appId=upload["appId"])
+    
     """
+    download = dnac_app.docker.download(image="nginx", tag="latest")
+    save = dnac_app.docker.save(image=download["image"], tag=download["tag"])
+    upload = dnac_app.upload(tar=save["filename"], categories="IOT")
 
-    """
-    download = dnac_app.docker.download(image="busybox", tag="1.32.0-glibc")
-    print(f"Image: {download")
-    #dnac_app.docker.download()
-    save = dnac_app.docker.save(image=download['image'], tag=download['tag'])
-    print(f"Save: {save}")
-    #dnac_app.docker.save(image="alpine", tag="latest")
-    """
-
-    """
     apps = dnac_app.get()
     for app in apps["data"]:
-        print(app["appId"])
-        #import json
-        #print(json.dumps(app, indent=4))
+        print(f"Name: {app['name']}\tAppId: {app['appId']}")
 
     update = dnac_app.update(appId="46e54562-83c9-4183-8632-c597c8cc5a2b", categories="IOT")
-    print(update)
-    """
-
-    """
-    upload = dnac_app.upload(tar="alpine.tar", categories="IOT")
-    #upload = dnac_app.upload(tar="speedtest.tar")
-    print(upload["appId"])
-    delete = dnac_app.delete(appId=upload["appId"])
-    """
-
-    """
-    #print(dnac_app.settings)
-    #print(dnac_app.get())
-    #print(dnac_app.get(image="robertcsapo/speedtest"))
+    
     app = dnac_app.get(image="robertcsapo/speedtest")
-    print(f'AppId: {app["data"][0]["appId"]} - Name: {app["data"][0]["name"]}')
-    app_id = app["data"][0]["appId"]
-    delete = dnac_app.delete(appId=app_id)
-    print(delete)
+    print(f'Name: {app["data"][0]["name"]}\tAppId: {app["data"][0]["appId"]}')
+    app = dnac_app.get(appId="46e54562-83c9-4183-8632-c597c8cc5a2b")
+    print(f'Name: {app["name"]}\tAppId: {app["appId"]}')
+
+    delete = dnac_app.delete(appId=upload["appId"])
+    print(f'Deleted\tAppId: {upload["appId"]}')
     """

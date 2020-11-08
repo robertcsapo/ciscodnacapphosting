@@ -1,4 +1,5 @@
 import json
+import logging
 from types import SimpleNamespace as Namespace
 import requests
 from requests.auth import HTTPBasicAuth
@@ -9,6 +10,8 @@ from ciscodnacapphosting import cli
 
 version = "0.1"
 
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)
 
 class Api:
     def __init__(self):
@@ -53,26 +56,32 @@ class Api:
         url = (
             f"https://{self.settings['dnac']['hostname']}/dna/system/api/v1/auth/token"
         )
+        logging.info(f"Cisco DNA Center Authentication ({url})")
         data = self._request(type="auth", url=url)
         self.settings["dnac"]["token"] = data["Token"]
-        pass
+        return
 
     def get(self, **kwargs):
         if "image" in kwargs:
+            logging.info(f"Cisco DNA Center AppHosting App ({kwargs['image']})")
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps?searchByName={kwargs['image']}"
             if "tag" in kwargs:
                 url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['image']}/{kwargs['tag']}"
         elif "appId" in kwargs:
+            logging.info(f"Cisco DNA Center AppHosting App ({kwargs['appId']})")
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest"
             if "tag" in kwargs:
                 url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}"
         else:
+            logging.info(f"Cisco DNA Center AppHosting App List")
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps?limit=1000&offset=0"
+        
         data = self._request(type="get", url=url)
         return data
 
     def upload(self, **kwargs):
         url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps?type=docker"
+        logging.info(f"Cisco DNA Center AppHosting Upload ({kwargs['tar']})")
         data = self._request(type="post", url=url, tar=kwargs["tar"])
         if "categories" in kwargs:
             data = self.update(
@@ -100,6 +109,7 @@ class Api:
         if valid_metadata[0] is False:
             raise Exception(f"Error: Unsupported metadata for application {kwargs}")
         data = {**app, **valid_metadata[1]}
+        logging.info(f"Cisco DNA Center AppHosting Update App ({data['name']})")
         data = self._request(type="put", url=url, payload=data)
         return data
 
@@ -108,6 +118,7 @@ class Api:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}?cancelOutstandingActions=true"
         else:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest?cancelOutstandingActions=true"
+        logging.info(f"Cisco DNA Center AppHosting Delete App ({kwargs['appId']})")
         data = self._request(type="delete", url=url)
         return data
 
@@ -213,7 +224,6 @@ class Api:
             response = requests.request(
                 "DELETE", url, headers=headers, verify=self.settings["dnac"]["secure"]
             )
-            print(response.status_code)
             if response.ok:
                 return True
             else:

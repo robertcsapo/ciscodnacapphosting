@@ -1,4 +1,6 @@
+import logging
 import docker
+
 
 class Api:
     def __init__(self):
@@ -8,6 +10,7 @@ class Api:
     def download(self, image=None, tag="latest"):
         if image is None:
             raise Exception(f"Error (download): Docker image name missing ({image})")
+        logging.info(f"Docker downloading {image}:{tag}")
         download = self.docker_client.images.pull(image, tag)
         data = {"image": image, "tag": tag}
         return data
@@ -15,6 +18,7 @@ class Api:
     def save(self, image=None, tag="latest"):
         if image is None:
             raise Exception(f"Error (save): Docker image name missing ({image})")
+        logging.info(f"Docker saving {image}:{tag}")
         tar = self.docker_client.images.get(f"{image}:{tag}")
         filename = f"{image}-{tag}.tar"
         f = open(filename, "wb")
