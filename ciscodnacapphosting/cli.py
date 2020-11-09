@@ -144,9 +144,11 @@ def delete(ctx, id, tag):
 @click.option("--save/--no-save", default=False)
 def docker(download, save):
     dnac_app = ciscodnacapphosting.Api()
-    print(type(save))
+    if download == None and save is False:
+        download = click.prompt("Docker image")
+        save = True
+        click.echo(f"Downloading {download} and saving it locally")
     if download != None:
-        print(download)
         if ":" in download:
             download = download.split(":")
             docker_download = dnac_app.docker.download(
@@ -154,13 +156,11 @@ def docker(download, save):
             )
         else:
             docker_download = dnac_app.docker.download(image=download, tag="latest")
-        print(docker_download)
     if save is True:
-        print("catch")
         save = dnac_app.docker.save(
             image=docker_download["image"], tag=docker_download["tag"]
         )
-        print(save)
+    click.echo(f"Download completed ({save['image']}) - saved as {save['filename']}")
     return
 
 
