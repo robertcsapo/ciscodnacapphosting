@@ -1,2 +1,5 @@
 docker
 requests
+requests_toolbelt
+click
+xmltodict
