@@ -1,5 +1,5 @@
-from setuptools import setup, find_packages
 from os import path
+from setuptools import setup, find_packages
 import ciscodnacapphosting
 
 with open("requirements.txt") as f:

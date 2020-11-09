@@ -29,7 +29,7 @@ email = "rcsapo@cisco.com"
 description = "Cisco DNA Center App Hosting SDK"
 copyright = "Copyright (c) 2020 Cisco and/or its affiliates."
 license = "Cisco Sample Code License, Version 1.1"
-version = "0.0.6"
+version = "0.0.7"
 
 urllib3.disable_warnings()
 logging.getLogger(__name__).addHandler(logging.NullHandler())

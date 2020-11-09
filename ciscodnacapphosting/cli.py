@@ -1,8 +1,9 @@
-import json
-import ciscodnacapphosting
-import click
 import os
+import json
+import click
 import yaml
+import ciscodnacapphosting
+
 
 """ciscodnacapphosting  Console Script.
 Copyright (c) 2020 Cisco and/or its affiliates.

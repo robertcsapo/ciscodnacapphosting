@@ -1,19 +1,19 @@
+""" Docker Class that integrates with local docker environment """
 import logging
 import docker
 
 
 class Api:
-    """ Docker Class with local environment """
+    """ API interface """
+
     def __init__(self):
         self.docker_client = docker.from_env()
-        return
 
     def download(self, image=None, tag="latest"):
         """ Download images from docker.io """
         if image is None:
             raise Exception(f"Error (download): Docker image name missing ({image})")
         logging.info(f"Docker downloading {image}:{tag}")
-        
         download = self.docker_client.images.pull(image, tag)
         data = {"image": image, "tag": tag}
 
