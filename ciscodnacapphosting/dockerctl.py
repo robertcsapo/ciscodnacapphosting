@@ -20,7 +20,7 @@ class Api:
             raise Exception(f"Error (save): Docker image name missing ({image})")
         logging.info(f"Docker saving {image}:{tag}")
         tar = self.docker_client.images.get(f"{image}:{tag}")
-        filename = f"{image}-{tag}.tar"
+        filename = f"{image.replace('/', '_')}-{tag}.tar"
         f = open(filename, "wb")
         for chunk in tar.save(named=True):
             f.write(chunk)
