@@ -1,13 +1,25 @@
 import json
 import ciscodnacapphosting
 import click
-
+import os
 
 @click.group(chain=True)
 @click.version_option()
 @click.pass_context
 def cli(ctx):
     pass
+
+@cli.command("whoami")
+@click.pass_context
+def dnac_config(ctx):
+    if "DNAC_CONFIG" in os.environ:
+        config = ciscodnacapphosting.Api.config(config=os.environ["DNAC_CONFIG"], operation="decode")
+        click.echo(f"Config: {json.dumps(config[1])}")
+        return
+    else:
+        config = ciscodnacapphosting.Api.config(operation="read")
+        click.echo(f"Config: {config[1]}")
+        return
 
 @cli.command("config")
 @click.option("--hostname", required=True)
@@ -18,17 +30,17 @@ def cli(ctx):
 @click.pass_context
 def dnac_config(ctx, hostname, username, password, secure, encode):
     if encode is True:
-        status = ciscodnacapphosting.Api.config(
+        config = ciscodnacapphosting.Api.config(
         hostname, username, password, secure, operation="encode"
     )
     else:
-        status = ciscodnacapphosting.Api.config(
+        config = ciscodnacapphosting.Api.config(
             hostname, username, password, secure, operation="write"
         )
-    if status[0] is True:
+    if config[0] is True:
         click.echo("Success: Config Updated")
         if encode is True:
-            click.echo(f"Config Encode: {status[1]}")
+            click.echo(f"Config Encode: {config[1]}")
     else:
         click.echo("Error: Config couldn't be updated")
     return

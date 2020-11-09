@@ -10,14 +10,11 @@ if __name__ == "__main__":
     logging.info("Starting Application")
     dnac_app = ciscodnacapphosting.Api()
     
-    download = dnac_app.docker.download(image="busybox", tag="1.32")
-    download = dnac_app.docker.download(image="robertcsapo/speedtest", tag="latest")
+    download = dnac_app.docker.download(image="busybox", tag="1.31")
     save = dnac_app.docker.save(image=download["image"], tag=download["tag"])
-    """
     upload = dnac_app.upload(tar=save["filename"], categories="IOT")
     app = dnac_app.get(appId=upload["appId"])
     print(f'Name: {app["name"]}\tAppId: {app["appId"]}')
-    """
     #delete = dnac_app.delete(appId=upload["appId"])
     
 
