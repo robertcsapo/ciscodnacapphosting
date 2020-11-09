@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
+import ciscodnacapphosting
 
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setup(
     name="ciscodnacapphosting",
-    author="Robert Csapo",
-    author_email="rcsapo@cisco.com",
-    description="Cisco DNA Center App Hosting SDK",
-    version="0.0.4",
+    author=ciscodnacapphosting.author,
+    description=ciscodnacapphosting.description,
+    version=ciscodnacapphosting.version,
     packages=find_packages(),
     py_modules=["ciscodnacapphosting"],
     install_requires=requirements,

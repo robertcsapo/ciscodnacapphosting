@@ -10,7 +10,9 @@ import base64
 import os
 import urllib3
 
-version = "0.1"
+author = "Robert Csapo"
+description = "Cisco DNA Center App Hosting SDK"
+version = "0.0.5"
 
 urllib3.disable_warnings()
 logging.getLogger(__name__).addHandler(logging.NullHandler())
