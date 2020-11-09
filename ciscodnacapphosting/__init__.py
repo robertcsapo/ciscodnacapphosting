@@ -1,6 +1,5 @@
 import json
 import logging
-from types import SimpleNamespace as Namespace
 import requests
 from requests.auth import HTTPBasicAuth
 from requests_toolbelt.multipart.encoder import MultipartEncoder
@@ -8,6 +7,7 @@ import xmltodict
 from ciscodnacapphosting import dockerctl
 from ciscodnacapphosting import cli
 import base64
+import os
 
 version = "0.1"
 
@@ -17,12 +17,21 @@ logger = logging.getLogger(__name__)
 
 class Api:
     def __init__(self):
-        self.settings = {}
         self.docker = dockerctl.Api()
-        config = self.config(operation="read")
+        self.settings = {}
+
+        if "DNAC_CONFIG" in os.environ:
+            print("catch")
+            config = self.config(
+                config=os.environ["DNAC_CONFIG"], operation="decode"
+            )
+        else:
+            config = self.config(operation="read")
+
         if config[0] is False:
             logging.fatal(f"{config[1]}")
             raise Exception(f"Error: {config[1]}")
+
         self.settings = {**self.settings, **config[1]}
 
         self._auth()
@@ -38,28 +47,24 @@ class Api:
                     "secure": secure,
                 }
             }
-            data = str(data)
-            # data_bytes = data.encode('ascii')
+            data = str(json.dumps(data, indent=4))
             data_base64 = base64.b64encode(data.encode("ascii"))
-            # print("catch")
-            print(data_base64.decode("utf-8"))
-            # import sys
-            # sys.exit()
             try:
                 with open("config.json", "w") as f:
                     f.write(data_base64.decode("utf-8"))
                 f.close()
-                return True, None
+                return True, data_base64.decode("utf-8")
             except Exception as e:
                 return False, f"Can't update config file ({e})"
             pass
         if "decode" in kwargs["operation"]:
+            print("catch2")
             data = kwargs["config"]
             try:
                 data == base64.b64encode(base64.b64decode(data)).decode("utf-8")
                 data = json.loads(base64.b64decode(data).decode("utf-8"))
-            except Exception:
-                return False, f"Can't decode config"
+            except Exception as e:
+                return False, f"Can't decode config ({e})"
             return True, data
         if "write" in kwargs["operation"]:
             data = {
@@ -83,7 +88,9 @@ class Api:
                     data = f.read()
                 f.close()
                 try:
-                    data == base64.b64encode(base64.b64decode(data)).decode("utf-8")
+                    data == base64.b64encode(base64.b64decode(data)).decode(
+                        "utf-8"
+                    )
                     data = json.loads(base64.b64decode(data).decode("utf-8"))
                 except Exception:
                     try:
@@ -97,9 +104,7 @@ class Api:
         return False, "Error"
 
     def _auth(self):
-        url = (
-            f"https://{self.settings['dnac']['hostname']}/dna/system/api/v1/auth/token"
-        )
+        url = f"https://{self.settings['dnac']['hostname']}/dna/system/api/v1/auth/token"
         logging.info(f"Cisco DNA Center Authentication ({url})")
         data = self._request(type="auth", url=url)
         self.settings["dnac"]["token"] = data["Token"]
@@ -141,7 +146,7 @@ class Api:
                 categories=kwargs["categories"],
             )
         return data
-    
+
     def upgrade(self, **kwargs):
         if "tag" not in kwargs:
             app = self.get(appId=kwargs["appId"])
@@ -173,7 +178,9 @@ class Api:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest"
         valid_metadata = self._supported_app_metadata(**kwargs)
         if valid_metadata[0] is False:
-            raise Exception(f"Error: Unsupported metadata for application {kwargs}")
+            raise Exception(
+                f"Error: Unsupported metadata for application {kwargs}"
+            )
         data = {**app, **valid_metadata[1]}
         logging.info(f"Cisco DNA Center AppHosting Update App ({data['name']})")
         data = self._request(type="put", url=url, payload=data)
@@ -184,7 +191,9 @@ class Api:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}?cancelOutstandingActions=true"
         else:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest?cancelOutstandingActions=true"
-        logging.info(f"Cisco DNA Center AppHosting Delete App ({kwargs['appId']})")
+        logging.info(
+            f"Cisco DNA Center AppHosting Delete App ({kwargs['appId']})"
+        )
         data = self._request(type="delete", url=url)
         return data
 
@@ -202,12 +211,16 @@ class Api:
     def _request(self, **kwargs):
         if "auth" in kwargs["type"].lower():
             url = kwargs["url"]
-            headers = {"Content-Type": "application/json", "Accept": "application/json"}
+            headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
             response = requests.request(
                 "POST",
                 url,
                 auth=HTTPBasicAuth(
-                    self.settings["dnac"]["username"], self.settings["dnac"]["password"]
+                    self.settings["dnac"]["username"],
+                    self.settings["dnac"]["password"],
                 ),
                 headers=headers,
                 verify=self.settings["dnac"]["secure"],
@@ -223,18 +236,19 @@ class Api:
                 "Accept": "application/json",
             }
             response = requests.request(
-                "GET", url, headers=headers, verify=self.settings["dnac"]["secure"]
+                "GET",
+                url,
+                headers=headers,
+                verify=self.settings["dnac"]["secure"],
             )
             if response.ok:
                 data = response.json()
             else:
                 if response.status_code == 404:
                     raise Exception(
-                    f"Error: Image not found in Cisco DNA Center App Hosting Repository"
-                )
-                raise Exception(
-                    f"Error: ({response.content})"
-                )
+                        f"Error: Image not found in Cisco DNA Center App Hosting Repository"
+                    )
+                raise Exception(f"Error: ({response.content})")
             return data
         if "post" in kwargs["type"].lower():
             url = kwargs["url"]
@@ -288,7 +302,9 @@ class Api:
             if response.ok:
                 data = response.json()
             else:
-                raise Exception(f"Error: Problem to update app - {response.content}")
+                raise Exception(
+                    f"Error: Problem to update app - {response.content}"
+                )
             return data
         if "delete" in kwargs["type"].lower():
             url = kwargs["url"]
@@ -297,7 +313,10 @@ class Api:
                 "Content-Type": "application/json",
             }
             response = requests.request(
-                "DELETE", url, headers=headers, verify=self.settings["dnac"]["secure"]
+                "DELETE",
+                url,
+                headers=headers,
+                verify=self.settings["dnac"]["secure"],
             )
             if response.ok:
                 return True
