@@ -2,6 +2,7 @@ import json
 import ciscodnacapphosting
 import click
 import os
+import yaml
 
 """ciscodnacapphosting  Console Script.
 Copyright (c) 2020 Cisco and/or its affiliates.
@@ -18,18 +19,25 @@ or implied.
 """
 
 """ Main Entry """
+
+
 @click.group(chain=True)
 @click.version_option()
 @click.pass_context
 def cli(ctx):
     pass
 
+
 """ Display current config """
+
+
 @cli.command("whoami")
 @click.pass_context
 def dnac_config(ctx):
     if "DNAC_CONFIG" in os.environ:
-        config = ciscodnacapphosting.Api.config(config=os.environ["DNAC_CONFIG"], operation="decode")
+        config = ciscodnacapphosting.Api.config(
+            config=os.environ["DNAC_CONFIG"], operation="decode"
+        )
         click.echo(f"Config: {json.dumps(config[1])}")
         return
     else:
@@ -37,7 +45,10 @@ def dnac_config(ctx):
         click.echo(f"Config: {config[1]}")
         return
 
+
 """ Configures Cisco DNA Center settings """
+
+
 @cli.command("config")
 @click.option("--hostname", required=True)
 @click.option("--username", required=True)
@@ -48,8 +59,8 @@ def dnac_config(ctx):
 def dnac_config(ctx, hostname, username, password, secure, encode):
     if encode is True:
         config = ciscodnacapphosting.Api.config(
-        hostname, username, password, secure, operation="encode"
-    )
+            hostname, username, password, secure, operation="encode"
+        )
     else:
         config = ciscodnacapphosting.Api.config(
             hostname, username, password, secure, operation="write"
@@ -62,7 +73,10 @@ def dnac_config(ctx, hostname, username, password, secure, encode):
         click.echo("Error: Config couldn't be updated")
     return
 
+
 """ Get Application(s) from Cisco DNA Center """
+
+
 @cli.command("app")
 @click.option("--id", required=False)
 @click.option("--image", required=False)
@@ -72,32 +86,36 @@ def app(ctx, id, image, tag):
     dnac_app = ciscodnacapphosting.Api()
     if id != None:
         click.echo(f"Get App ({id})")
-    elif image != None:
-        click.echo(f"Get App ({image})")
-    else:
-        click.echo(f"Get App list")
-    if id != None:
         if tag != None:
             app = dnac_app.get(appId=id, tag=tag)
-            click.echo(json.dumps(app, indent=4))
+            click.echo(
+                yaml.safe_dump(app, allow_unicode=True, default_flow_style=False)
+            )
             return
         app = dnac_app.get(appId=id)
-        click.echo(json.dumps(app, indent=4))
+        click.echo(yaml.safe_dump(app, allow_unicode=True, default_flow_style=False))
         return
     if image != None:
+        click.echo(f"Get App ({image})")
         if tag != None:
             app = dnac_app.get(image=image, tag=tag)
-            click.echo(json.dumps(app, indent=4))
+            click.echo(
+                yaml.safe_dump(app, allow_unicode=True, default_flow_style=False)
+            )
             return
         app = dnac_app.get(image=image)
-        click.echo(json.dumps(app, indent=4))
+        click.echo(yaml.safe_dump(app, allow_unicode=True, default_flow_style=False))
         return
+    click.echo(f"Get App list")
     apps = dnac_app.get()
     for app in apps["data"]:
-        click.echo(json.dumps(app, indent=4))
+        click.echo(yaml.safe_dump(app, allow_unicode=True, default_flow_style=False))
     return
 
+
 """ Upload Applications to Cisco DNA Center """
+
+
 @cli.command("upload")
 @click.option("--file", required=True)
 @click.option("--categories", required=True)
@@ -106,10 +124,15 @@ def upload(ctx, file, categories):
     dnac_app = ciscodnacapphosting.Api()
     click.echo(f"Upload App ({file}) - {categories}")
     upload = dnac_app.upload(tar=file, categories=categories)
-    click.echo(f"New AppId ({upload['appId']}) {upload['name']}:{upload['version']} - {categories}")
+    click.echo(
+        f"New AppId ({upload['appId']}) {upload['name']}:{upload['version']} - {categories}"
+    )
     return
 
+
 """ Upgrade Applications to Cisco DNA Center """
+
+
 @cli.command("upgrade")
 @click.option("--id", required=True)
 @click.option("--tag", required=False)
@@ -124,10 +147,15 @@ def upgrade(ctx, id, tag, file, categories):
     else:
         click.echo(f"Upgrade App ({file}) - latest - {categories}")
         upgrade = dnac_app.upgrade(appId=id, tar=file, categories=categories)
-    click.echo(f"New AppId {upgrade['appId']} of {upgrade['name']}:{upgrade['version']}")
+    click.echo(
+        f"New AppId {upgrade['appId']} of {upgrade['name']}:{upgrade['version']}"
+    )
     return
 
+
 """ Update Metadata about Applications to Cisco DNA Center """
+
+
 @cli.command("update")
 @click.option("--id", required=True)
 @click.option("--categories", required=True)
@@ -139,7 +167,10 @@ def update(ctx, id, categories):
     click.echo(f"Update App ({update['appId']}) {update['name']} - categories")
     return
 
+
 """ Delete Application(s) from Cisco DNA Center """
+
+
 @cli.command("delete")
 @click.option("--id", required=True)
 @click.option("--tag", required=False)
@@ -156,7 +187,10 @@ def delete(ctx, id, tag):
         click.echo(f"Deleted App ({id})")
     return
 
+
 """ Wrapped docker cli to download and save """
+
+
 @cli.command("docker")
 @click.option("--download", required=False)
 @click.option("--save/--no-save", default=False)
@@ -178,8 +212,11 @@ def docker(download, save):
         save = dnac_app.docker.save(
             image=docker_download["image"], tag=docker_download["tag"]
         )
-        click.echo(f"Download completed ({save['image']}) - saved as {save['filename']}")
+        click.echo(
+            f"Download completed ({save['image']}) - saved as {save['filename']}"
+        )
     return
+
 
 if __name__ == "__main__":
     cli()
