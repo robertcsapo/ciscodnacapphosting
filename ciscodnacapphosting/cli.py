@@ -34,7 +34,7 @@ def cli(ctx):
 
 @cli.command("whoami")
 @click.pass_context
-def dnac_config(ctx):
+def whoami(ctx):
     if "DNAC_CONFIG" in os.environ:
         config = ciscodnacapphosting.Api.config(
             config=os.environ["DNAC_CONFIG"], operation="decode"

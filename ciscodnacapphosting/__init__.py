@@ -1,14 +1,15 @@
+import os
+import base64
 import json
 import logging
 import requests
+import urllib3
 from requests.auth import HTTPBasicAuth
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import xmltodict
 from ciscodnacapphosting import dockerctl
 from ciscodnacapphosting import cli
-import base64
-import os
-import urllib3
+
 
 """ciscodnacapphosting  Console Script.
 Copyright (c) 2020 Cisco and/or its affiliates.
