@@ -1,13 +1,24 @@
 from setuptools import setup, find_packages
+from os import path
 import ciscodnacapphosting
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     requirements = f.read().splitlines()
+
+
+# pwd = path.abspath(path.dirname(__file__))
+with open(
+    path.join(path.abspath(path.dirname(__file__)), "README.md"), encoding="utf-8"
+) as f:
+    long_description = f.read()
 
 setup(
     name="ciscodnacapphosting",
     author=ciscodnacapphosting.author,
+    author_email=ciscodnacapphosting.email,
     description=ciscodnacapphosting.description,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     version=ciscodnacapphosting.version,
     packages=find_packages(),
     py_modules=["ciscodnacapphosting"],

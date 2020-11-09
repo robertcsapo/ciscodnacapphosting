@@ -10,9 +10,26 @@ import base64
 import os
 import urllib3
 
+"""ciscodnacapphosting  Console Script.
+Copyright (c) 2020 Cisco and/or its affiliates.
+This software is licensed to you under the terms of the Cisco Sample
+Code License, Version 1.1 (the "License"). You may obtain a copy of the
+License at
+               https://developer.cisco.com/docs/licenses
+All use of the material herein must be in accordance with the terms of
+the License. All rights not expressly granted by the License are
+reserved. Unless required by applicable law or agreed to separately in
+writing, software distributed under the License is distributed on an "AS
+IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+or implied.
+"""
+
 author = "Robert Csapo"
+email = "rcsapo@cisco.com"
 description = "Cisco DNA Center App Hosting SDK"
-version = "0.0.5"
+copyright = "Copyright (c) 2020 Cisco and/or its affiliates."
+license = "Cisco Sample Code License, Version 1.1"
+version = "0.0.6"
 
 urllib3.disable_warnings()
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -24,10 +41,11 @@ class Api:
         self.docker = dockerctl.Api()
         self.settings = {}
 
+        """
+        Read config from OS or local file
+        """
         if "DNAC_CONFIG" in os.environ:
-            config = self.config(
-                config=os.environ["DNAC_CONFIG"], operation="decode"
-            )
+            config = self.config(config=os.environ["DNAC_CONFIG"], operation="decode")
         else:
             config = self.config(operation="read")
 
@@ -36,7 +54,6 @@ class Api:
             raise Exception(f"Error: {config[1]}")
 
         self.settings = {**self.settings, **config[1]}
-
         self._auth()
         return
 
@@ -60,6 +77,7 @@ class Api:
             except Exception as e:
                 return False, f"Can't update config file ({e})"
             pass
+
         if "decode" in kwargs["operation"]:
             data = kwargs["config"]
             try:
@@ -68,6 +86,7 @@ class Api:
             except Exception as e:
                 return False, f"Can't decode config ({e})"
             return True, data
+
         if "write" in kwargs["operation"]:
             data = {
                 "dnac": {
@@ -84,15 +103,14 @@ class Api:
                 return True, None
             except Exception as e:
                 return False, f"Can't update config file ({e})"
+
         if "read" in kwargs["operation"]:
             try:
                 with open("config.json", "r") as f:
                     data = f.read()
                 f.close()
                 try:
-                    data == base64.b64encode(base64.b64decode(data)).decode(
-                        "utf-8"
-                    )
+                    data == base64.b64encode(base64.b64decode(data)).decode("utf-8")
                     data = json.loads(base64.b64decode(data).decode("utf-8"))
                 except Exception:
                     try:
@@ -106,13 +124,17 @@ class Api:
         return False, "Error"
 
     def _auth(self):
-        url = f"https://{self.settings['dnac']['hostname']}/dna/system/api/v1/auth/token"
+        """ Authenticate towards Cisco DNA Center """
+        url = (
+            f"https://{self.settings['dnac']['hostname']}/dna/system/api/v1/auth/token"
+        )
         logging.info(f"Cisco DNA Center Authentication ({url})")
         data = self._request(type="auth", url=url)
         self.settings["dnac"]["token"] = data["Token"]
         return
 
     def get(self, **kwargs):
+        """ Get Application(s) from Cisco DNA Center """
         if "image" in kwargs:
             logging.info(f"Cisco DNA Center AppHosting App ({kwargs['image']})")
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps?searchByName={kwargs['image']}"
@@ -126,13 +148,16 @@ class Api:
         else:
             logging.info(f"Cisco DNA Center AppHosting App List")
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps?limit=1000&offset=0"
+
         data = self._request(type="get", url=url)
         return data
 
     def upload(self, **kwargs):
+        """ Upload Applications to Cisco DNA Center """
         url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps?type=docker"
         logging.info(f"Cisco DNA Center AppHosting Upload ({kwargs['tar']})")
         data = self._request(type="post", url=url, tar=kwargs["tar"])
+        """ Categories is mandatory in the UI """
         if "categories" in kwargs:
             data = self.update(
                 appId=data["appId"],
@@ -147,15 +172,19 @@ class Api:
                 tag=data["version"],
                 categories=kwargs["categories"],
             )
+
         return data
 
     def upgrade(self, **kwargs):
+        """ Upgrade Applications to Cisco DNA Center """
         if "tag" not in kwargs:
             app = self.get(appId=kwargs["appId"])
             kwargs["tag"] = app["version"]
         url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}/package?type=docker&action=update"
         logging.info(f"Cisco DNA Center AppHosting Upgrade ({kwargs['tar']})")
         data = self._request(type="post", url=url, tar=kwargs["tar"])
+
+        """ Categories is mandatory in the UI """
         if "categories" in kwargs:
             data = self.update(
                 appId=data["appId"],
@@ -170,36 +199,47 @@ class Api:
                 tag=data["version"],
                 categories=kwargs["categories"],
             )
+
         return data
 
     def update(self, **kwargs):
+        """ Update Metadata about Applications to Cisco DNA Center """
         app = self.get(appId=kwargs["appId"])
         if "tag" in kwargs:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}"
         else:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest"
+
+        """ Validate categories input, based on those in UI """
         valid_metadata = self._supported_app_metadata(**kwargs)
         if valid_metadata[0] is False:
-            raise Exception(
-                f"Error: Unsupported metadata for application {kwargs}"
-            )
+            raise Exception(f"Error: Unsupported metadata for application {kwargs}")
+
         data = {**app, **valid_metadata[1]}
         logging.info(f"Cisco DNA Center AppHosting Update App ({data['name']})")
         data = self._request(type="put", url=url, payload=data)
+
         return data
 
     def delete(self, **kwargs):
+        """ Delete Application(s) from Cisco DNA Center """
         if "tag" in kwargs:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/{kwargs['tag']}?cancelOutstandingActions=true"
         else:
             url = f"https://{self.settings['dnac']['hostname']}/api/iox/service/api/v1/appmgr/apps/{kwargs['appId']}/latest?cancelOutstandingActions=true"
-        logging.info(
-            f"Cisco DNA Center AppHosting Delete App ({kwargs['appId']})"
-        )
+        logging.info(f"Cisco DNA Center AppHosting Delete App ({kwargs['appId']})")
         data = self._request(type="delete", url=url)
+
         return data
 
+    """
+    Private Functions to support Public Functions
+    """
+
     def _supported_app_metadata(self, **kwargs):
+        """
+        Validate Metadata
+        """
         data = {}
         if "categories" in kwargs:
             categories = ["Monitoring", "Security", "IOT", "Others"]
@@ -211,6 +251,10 @@ class Api:
         return False, None
 
     def _request(self, **kwargs):
+        """
+        HTTP Requests
+        """
+
         if "auth" in kwargs["type"].lower():
             url = kwargs["url"]
             headers = {
@@ -255,6 +299,7 @@ class Api:
                     )
                 raise Exception(f"Error: ({response.content})")
             return data
+
         if "post" in kwargs["type"].lower():
             url = kwargs["url"]
             tar = kwargs["tar"]
@@ -307,10 +352,9 @@ class Api:
             if response.ok:
                 data = response.json()
             else:
-                raise Exception(
-                    f"Error: Problem to update app - {response.content}"
-                )
+                raise Exception(f"Error: Problem to update app - {response.content}")
             return data
+
         if "delete" in kwargs["type"].lower():
             url = kwargs["url"]
             headers = {
