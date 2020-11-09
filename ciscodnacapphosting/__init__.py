@@ -8,9 +8,11 @@ from ciscodnacapphosting import dockerctl
 from ciscodnacapphosting import cli
 import base64
 import os
+import urllib3
 
 version = "0.1"
 
+urllib3.disable_warnings()
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,6 @@ class Api:
         self.settings = {}
 
         if "DNAC_CONFIG" in os.environ:
-            print("catch")
             config = self.config(
                 config=os.environ["DNAC_CONFIG"], operation="decode"
             )
@@ -58,7 +59,6 @@ class Api:
                 return False, f"Can't update config file ({e})"
             pass
         if "decode" in kwargs["operation"]:
-            print("catch2")
             data = kwargs["config"]
             try:
                 data == base64.b64encode(base64.b64decode(data)).decode("utf-8")
@@ -225,7 +225,10 @@ class Api:
                 headers=headers,
                 verify=self.settings["dnac"]["secure"],
             )
-            data = response.json()
+            if response.ok:
+                data = response.json()
+            else:
+                raise Exception(f"Can't login to Cisco DNA Center ({response.json()})")
             return data
 
         if "get" in kwargs["type"].lower():

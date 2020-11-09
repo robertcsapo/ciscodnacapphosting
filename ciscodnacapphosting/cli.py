@@ -13,7 +13,7 @@ def cli(ctx):
 @click.option("--hostname", required=True)
 @click.option("--username", required=True)
 @click.option("--password", required=True)
-@click.option("--secure/--no-secure", default=True)
+@click.option("--secure/--insecure", default=True)
 @click.option("--encode/--no-decode", default=False)
 @click.pass_context
 def dnac_config(ctx, hostname, username, password, secure, encode):
@@ -27,6 +27,8 @@ def dnac_config(ctx, hostname, username, password, secure, encode):
         )
     if status[0] is True:
         click.echo("Success: Config Updated")
+        if encode is True:
+            click.echo(f"Config Encode: {status[1]}")
     else:
         click.echo("Error: Config couldn't be updated")
     return
