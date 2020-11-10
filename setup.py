@@ -19,6 +19,7 @@ setup(
     description=ciscodnacapphosting.description,
     long_description=long_description,
     long_description_content_type="text/markdown",
+    url=ciscodnacapphosting.repo_url,
     version=ciscodnacapphosting.version,
     packages=find_packages(),
     py_modules=["ciscodnacapphosting"],

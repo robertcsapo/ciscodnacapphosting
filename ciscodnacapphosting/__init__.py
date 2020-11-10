@@ -28,9 +28,10 @@ or implied.
 author = "Robert Csapo"
 email = "rcsapo@cisco.com"
 description = "Cisco DNA Center App Hosting SDK"
+repo_url = "https://github.com/robertcsapo/cisco-dnac-app-hosting-import-docker-images/"
 copyright = "Copyright (c) 2020 Cisco and/or its affiliates."
 license = "Cisco Sample Code License, Version 1.1"
-version = "0.0.7"
+version = "0.1"
 
 urllib3.disable_warnings()
 logging.getLogger(__name__).addHandler(logging.NullHandler())
