@@ -20,6 +20,8 @@ It uses local docker environment to pull and save docker images.
 - Cisco DNA Center
   - Supported release: 2.1.2+
 - Cisco Catalyst 9000 Switches/APs
+- Python
+  - Version: 3.8+
 
 # Demo
 ```bash
