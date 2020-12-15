@@ -19,7 +19,7 @@ It uses local docker environment to pull and save docker images.
 # Prerequisites
 - Cisco DNA Center
   - Supported release: 2.1.2+
-- Catalyst 9000 Switches/APs
+- Cisco Catalyst 9000 Switches/APs
 
 # Demo
 ```bash
