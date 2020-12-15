@@ -1,4 +1,13 @@
 # cisco-dnac-app-hosting-import-docker-images
+![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/robertcsapo/ciscodnacapphosting)
+![Docker Cloud Automated build](https://img.shields.io/docker/cloud/automated/robertcsapo/ciscodnacapphosting)
+![Docker Pulls](https://img.shields.io/docker/pulls/robertcsapo/ciscodnacapphosting)
+![Docker Image Version (latest by date)](https://img.shields.io/docker/v/robertcsapo/ciscodnacapphosting)  
+![PyPI - Downloads](https://img.shields.io/pypi/dm/ciscodnacapphosting)
+![PyPI - Wheel](https://img.shields.io/pypi/wheel/ciscodnacapphosting)
+![PyPI](https://img.shields.io/pypi/v/ciscodnacapphosting)
+
+
 
 Disclaimer  
 This solution leverages currently unpublished Cisco DNA Center APIs (as of DATE)  
@@ -6,6 +15,13 @@ Do not use in production
 
 ```ciscodnacapphosting``` is a Python SDK for Cisco DNA Center Application Hosting API.  
 It uses local docker environment to pull and save docker images.
+
+# Prerequisites
+- Cisco DNA Center
+  - Supported release: 2.1.2+
+- Cisco Catalyst 9000 Switches/APs
+- Python
+  - Version: 3.8+
 
 # Demo
 ```bash
