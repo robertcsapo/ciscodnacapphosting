@@ -27,6 +27,12 @@ setup(
     entry_points="""
         [console_scripts]
         ciscodnacapphosting=ciscodnacapphosting.cli:cli
-    """,
+        """,
+    classifiers=[
+        "Programming Language :: Python :: 3.8",
+        "Operating System :: OS Independent",
+        "Topic :: Software Development :: Build Tools",
+        "License :: Other/Proprietary License :: CISCO SAMPLE CODE LICENSE",
+    ],
     python_requires=">=3.8",
 )
