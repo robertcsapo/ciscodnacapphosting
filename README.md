@@ -1,4 +1,4 @@
-# cisco-dnac-app-hosting-import-docker-images
+# ciscodnacapphosting
 ![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/robertcsapo/ciscodnacapphosting)
 ![Docker Cloud Automated build](https://img.shields.io/docker/cloud/automated/robertcsapo/ciscodnacapphosting)
 ![Docker Pulls](https://img.shields.io/docker/pulls/robertcsapo/ciscodnacapphosting)
@@ -22,6 +22,28 @@ It uses local docker environment to pull and save docker images.
 - Cisco Catalyst 9000 Switches/APs
 - Python
   - Version: 3.8+
+  
+# Import Docker images to Cisco DNA Center application hosting
+
+If you develop your own container images, then you can use this tool to automatically upload or update those container to any Cisco DNA Center Application Hosting Repository (using the Platform API).
+
+It's possible to use this tool together with your CI/CD by adding these steps  
+* ```pip install ciscodnacapphosting```  
+* ```ciscodnacapphosting upgrade --id 71257f4a-1f68-43a5-85f0-3347137107bb --tag 1.31 --file busybox-1.32.tar --categories IOT```
+
+Creating containers on your own workstation/development environment?  
+No worries, just install this tool through ```pip``` and upload your container directly to Cisco DNA Center.
+
+This code is also shared on Cisco DevNet Code Exchange - [cisco-dnac-app-hosting-import-docker-images](https://developer.cisco.com/codeexchange/github/repo/robertcsapo/cisco-dnac-app-hosting-import-docker-images)
+
+## Application Hosting
+[Application Hosting on Catalyst 9000 series switches](https://developer.cisco.com/app-hosting/)
+
+## Related Sandbox
+[IOS XE on Catalyst 9000 16.12 Code](https://devnetsandbox.cisco.com/RM/Diagram/Index/98d5a0fb-1b92-4b5b-abf6-a91e0ddba241?diagramType=Topology)
+
+## Links to DevNet Learning Labs
+[Application Hosting on IOS XE Learning Lab](https://developer.cisco.com/learning/modules/app-hosting-cat9k)
 
 # Demo
 ```bash
