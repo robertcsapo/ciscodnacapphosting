@@ -32,7 +32,8 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Build Tools",
-        "License :: Other/Proprietary License :: CISCO SAMPLE CODE LICENSE",
+        "License :: Other/Proprietary License",
     ],
+    license=ciscodnacapphosting.license,
     python_requires=">=3.8",
 )
